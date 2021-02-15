@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="utf-8">
+    <head><title>強震モニタ　音声通知</title></head>
+    <script>
+
+// http://www.kmoni.bosai.go.jp/webservice/hypo/eew/20210214194741.json?jsoncallback=callback
+
+const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
+
+let timeoutId = 0;
+let scriptTag;
+let prevText = '';
+let testVoice = 'これはテストです。'
+window.callback = (payload) => {
+    if(timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = 0;
+    }
+    if(scriptTag) {
+        console.log(scriptTag.src + "received");
+        document.body.removeChild(scriptTag);
+        scriptTag = null;
+    }
+
+    if(true) {
+        payload.magunitude = 7.2;
+        payload.region_name = '和歌山県北部';
+        payload.calcintensity = 5;
+    }
+
+    if(payload.magunitude && payload.region_name && payload.calcintensity) {
+        const text = `地震発生！震度${payload.calcintensity}、${payload.region_name}、マグニチュード${payload.magunitude}`;
+        if(prevText !== text) {
+            prevText = text;
+            const utterance = new SpeechSynthesisUtterance();
+            utterance.lang = 'ja-JP';
+            utterance.text = testVoice + text;
+            speechSynthesis.speak(utterance);
+            if(!testVoice) {
+                console.log(new Date(), text);
+            }
+            testVoice = '';
+        }
+    }
+    setTimeout(loadJsonP, 1000);
+};
+
+const removeScript = () => {
+    timeoutId = 0;
+    document.body.removeChild(scriptTag);
+    scriptTag = null;
+
+    loadJsonP();
+}
+
+const loadJsonP = () => {
+    const script = document.createElement('script');
+    const d = new Date;
+    script.src = url + `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}${d.getHours()}${d.getMinutes()}${d.getSeconds()}.json?jsoncallback=callback`;
+    scriptTag = document.body.appendChild(script);
+    timeoutId = setTimeout(removeScript, 10000);
+};
+onload = () => {
+    //loadJsonP();
+    //console.log('load',document.body.getElementsByTagName('input'))
+    document.body.getElementsByTagName('input')[0].onclick = () => {
+        console.log("script started");
+        document.body.getElementsByTagName('input')[0].onclick = () => {};
+        loadJsonP();
+    }
+};
+    </script>
+    <body>
+        <input type="button" value="start"> 最初にテストが流れます
+    </body>
+</html>
