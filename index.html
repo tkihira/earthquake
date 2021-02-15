@@ -5,25 +5,27 @@
     <script>
 
 // http://www.kmoni.bosai.go.jp/webservice/hypo/eew/20210214194741.json?jsoncallback=callback
+// 20210215141000
 
 const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
 
 let timeoutId = 0;
 let scriptTag;
 let prevText = '';
-let testVoice = 'これはテストです。'
+let testVoice = 'これはテストです。';
+let startTime = 0;
+
 window.callback = (payload) => {
     if(timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = 0;
     }
     if(scriptTag) {
-        console.log(scriptTag.src + "received");
         document.body.removeChild(scriptTag);
         scriptTag = null;
     }
 
-    if(true) {
+    if(testVoice) {
         payload.magunitude = 7.2;
         payload.region_name = '和歌山県北部';
         payload.calcintensity = 5;
@@ -47,6 +49,7 @@ window.callback = (payload) => {
 };
 
 const removeScript = () => {
+    console.log('connection failed');
     timeoutId = 0;
     document.body.removeChild(scriptTag);
     scriptTag = null;
@@ -54,10 +57,17 @@ const removeScript = () => {
     loadJsonP();
 }
 
+const n = (str) => {
+    return ('0' + str).substr(-2);
+}
+
 const loadJsonP = () => {
     const script = document.createElement('script');
-    const d = new Date;
-    script.src = url + `${d.getFullYear()}${d.getMonth() + 1}${d.getDate()}${d.getHours()}${d.getMinutes()}${d.getSeconds()}.json?jsoncallback=callback`;
+    let d = new Date(Date.now() - 5000);
+    if(false) {
+        d = new Date((Date.now() - startTime) + 1613365800000 + 30000);
+    }
+    script.src = url + `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}.json?jsoncallback=callback`;
     scriptTag = document.body.appendChild(script);
     timeoutId = setTimeout(removeScript, 10000);
 };
@@ -67,6 +77,7 @@ onload = () => {
     document.body.getElementsByTagName('input')[0].onclick = () => {
         console.log("script started");
         document.body.getElementsByTagName('input')[0].onclick = () => {};
+        startTime = Date.now();
         loadJsonP();
     }
 };
