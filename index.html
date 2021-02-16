@@ -20,10 +20,15 @@ let testVoice = 'これはテストです。';
 let startTime = 0;
 
 const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance();
-    utterance.lang = 'ja-JP';
-    utterance.text = text;
-    speechSynthesis.speak(utterance);
+    try {
+        const utterance = new SpeechSynthesisUtterance();
+        utterance.lang = 'ja-JP';
+        utterance.text = text;
+        speechSynthesis.speak(utterance);
+    } catch(e) {
+        console.log(e);
+    }
+    document.getElementById('text').innerHTML += `${new Date()}: ${text}<br>`;
     console.log(new Date(), text);
 };
 
@@ -39,9 +44,9 @@ window.callback = (payload) => {
 
     if(testVoice) {
         // 初回テスト
-        payload.magunitude = 7.2;
-        payload.region_name = '和歌山県北部';
-        payload.calcintensity = 5;
+        payload.magunitude = 0.1;
+        payload.region_name = '沖ノ鳥島南部';
+        payload.calcintensity = 1;
         payload.report_id = 'test';
     }
 
@@ -63,9 +68,9 @@ window.callback = (payload) => {
             prevCalcIntensity = payload.calcintensity;
             if(prevMagunitude && prevRegionName && prevCalcIntensity) {
                 // 情報が揃ったので音を出す
-                const text = `地震発生！震度${payload.calcintensity}、${payload.region_name}、マグニチュード${payload.magunitude}`;
+                const text = `${(testVoice)?testVoice:"地震発生！"}震度${payload.calcintensity}、${payload.region_name}、マグニチュード${payload.magunitude}`;
                 prevText = text;
-                speak(testVoice + text);
+                speak(text);
                 testVoice = '';
             }
         } else {
@@ -120,6 +125,7 @@ onload = () => {
     //console.log('load',document.body.getElementsByTagName('input'))
     document.body.getElementsByTagName('input')[0].onclick = () => {
         console.log("script started");
+        document.body.getElementsByTagName('input')[0].disabled = true;
         document.body.getElementsByTagName('input')[0].onclick = () => {};
         startTime = Date.now();
         loadJsonP();
@@ -127,6 +133,7 @@ onload = () => {
 };
     </script>
     <body>
-        <input type="button" value="start"> 最初にテストが流れます
+        <input type="button" value="start"> スタートを押すと、最初にテスト音声が流れます<br>
+        <div id="text">発声ログ:<br></div>
     </body>
 </html>
