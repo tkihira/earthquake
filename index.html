@@ -12,8 +12,20 @@ const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
 let timeoutId = 0;
 let scriptTag;
 let prevText = '';
+let prevReportId = '';
+let prevMagunitude;
+let prevRegionName;
+let prevCalcIntensity;
 let testVoice = 'これはテストです。';
 let startTime = 0;
+
+const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.lang = 'ja-JP';
+    utterance.text = text;
+    speechSynthesis.speak(utterance);
+    console.log(new Date(), text);
+};
 
 window.callback = (payload) => {
     if(timeoutId) {
@@ -26,25 +38,57 @@ window.callback = (payload) => {
     }
 
     if(testVoice) {
+        // 初回テスト
         payload.magunitude = 7.2;
         payload.region_name = '和歌山県北部';
         payload.calcintensity = 5;
+        payload.report_id = 'test';
     }
 
-    if(payload.magunitude && payload.region_name && payload.calcintensity) {
-        const text = `地震発生！震度${payload.calcintensity}、${payload.region_name}、マグニチュード${payload.magunitude}`;
-        if(prevText !== text) {
-            prevText = text;
-            const utterance = new SpeechSynthesisUtterance();
-            utterance.lang = 'ja-JP';
-            utterance.text = testVoice + text;
-            speechSynthesis.speak(utterance);
-            if(!testVoice) {
-                console.log(new Date(), text);
+    if(payload.report_id !== '' && payload.report_id !== prevReportId) {
+        // 新しい地震を検知
+        console.log('地震検知: ' + payload.report_id);
+        prevMagunitude = '';
+        prevRegionName = '';
+        prevCalcIntensity = '';
+        prevText = '';
+        prevReportId = payload.report_id;
+    }
+
+    if(payload.report_id) {
+        if(!prevText) {
+            // まだ音を出していない
+            prevMagunitude = payload.magunitude;
+            prevRegionName = payload.region_name;
+            prevCalcIntensity = payload.calcintensity;
+            if(prevMagunitude && prevRegionName && prevCalcIntensity) {
+                // 情報が揃ったので音を出す
+                const text = `地震発生！震度${payload.calcintensity}、${payload.region_name}、マグニチュード${payload.magunitude}`;
+                prevText = text;
+                speak(testVoice + text);
+                testVoice = '';
             }
-            testVoice = '';
+        } else {
+            // 情報が更新された場合に音を出す
+            let text = '';
+            if(payload.calcintensity !== prevCalcIntensity) {
+                text += `、震度${payload.calcintensity}`;
+            }
+            if(payload.region_name !== prevRegionName) {
+                text += `、${payload.region_name}`;
+            }
+            if(payload.magunitude !== prevMagunitude) {
+                text += `、マグニチュード${payload.magunitude}`;
+            }
+            if(text) {
+                speak('情報更新'+text);
+                prevMagunitude = payload.magunitude;
+                prevRegionName = payload.region_name;
+                prevCalcIntensity = payload.calcintensity;
+            }
         }
     }
+
     setTimeout(loadJsonP, 1000);
 };
 
@@ -65,7 +109,7 @@ const loadJsonP = () => {
     const script = document.createElement('script');
     let d = new Date(Date.now() - 5000);
     if(false) {
-        d = new Date((Date.now() - startTime) + 1613365800000 + 30000);
+        d = new Date((Date.now() - startTime) + (+new Date("2021/02/15 21:26:08.00+900")));
     }
     script.src = url + `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}.json?jsoncallback=callback`;
     scriptTag = document.body.appendChild(script);
