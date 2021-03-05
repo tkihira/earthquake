@@ -24,6 +24,7 @@ const speak = (text) => {
         const utterance = new SpeechSynthesisUtterance();
         utterance.lang = 'ja-JP';
         utterance.text = text;
+        utterance.volume = +document.getElementById('volume').value / 100;
         speechSynthesis.speak(utterance);
     } catch(e) {
         console.log(e);
@@ -60,12 +61,16 @@ window.callback = (payload) => {
         prevReportId = payload.report_id;
     }
 
+    const minShindo = +document.getElementById('shindo').value;
+    const noUpdate = !!document.getElementById('no_update').checked;
     if(payload.report_id) {
         if(!prevText) {
             // まだ音を出していない
-            prevMagunitude = payload.magunitude;
-            prevRegionName = payload.region_name;
-            prevCalcIntensity = payload.calcintensity;
+            if(testVoice || payload.calcintensity > minShindo) {
+                prevMagunitude = payload.magunitude;
+                prevRegionName = payload.region_name;
+                prevCalcIntensity = payload.calcintensity;
+            }
             if(prevMagunitude && prevRegionName && prevCalcIntensity) {
                 // 情報が揃ったので音を出す
                 const text = `${(testVoice)?testVoice:"地震発生！"}震度${payload.calcintensity}、${payload.region_name}、マグニチュード${payload.magunitude}`;
@@ -74,22 +79,24 @@ window.callback = (payload) => {
                 testVoice = '';
             }
         } else {
-            // 情報が更新された場合に音を出す
-            let text = '';
-            if(payload.calcintensity !== prevCalcIntensity) {
-                text += `、震度${payload.calcintensity}`;
-            }
-            if(payload.region_name !== prevRegionName) {
-                text += `、${payload.region_name}`;
-            }
-            if(payload.magunitude !== prevMagunitude) {
-                text += `、マグニチュード${payload.magunitude}`;
-            }
-            if(text) {
-                speak('情報更新'+text);
-                prevMagunitude = payload.magunitude;
-                prevRegionName = payload.region_name;
-                prevCalcIntensity = payload.calcintensity;
+            if(!noUpdate && payload.calcintensity > minShindo) {
+                // 情報が更新された場合に音を出す
+                let text = '';
+                if(payload.calcintensity !== prevCalcIntensity) {
+                    text += `、震度${payload.calcintensity}`;
+                }
+                if(payload.region_name !== prevRegionName) {
+                    text += `、${payload.region_name}`;
+                }
+                if(payload.magunitude !== prevMagunitude) {
+                    text += `、マグニチュード${payload.magunitude}`;
+                }
+                if(text) {
+                    speak('情報更新'+text);
+                    prevMagunitude = payload.magunitude;
+                    prevRegionName = payload.region_name;
+                    prevCalcIntensity = payload.calcintensity;
+                }
             }
         }
     }
@@ -121,19 +128,32 @@ const loadJsonP = () => {
     timeoutId = setTimeout(removeScript, 10000);
 };
 onload = () => {
-    //loadJsonP();
-    //console.log('load',document.body.getElementsByTagName('input'))
-    document.body.getElementsByTagName('input')[0].onclick = () => {
+    document.getElementById('start').onclick = () => {
         console.log("script started");
-        document.body.getElementsByTagName('input')[0].disabled = true;
-        document.body.getElementsByTagName('input')[0].onclick = () => {};
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('start').disabled = true;
+        document.getElementById('start').onclick = () => {};
+        document.getElementById('volume').value = 85;
+        document.getElementById('shindo').value = 1;
+        document.getElementById('test').onclick = () => {
+            speak('テストです');
+        };
+        document.getElementById('shindo').onchange = () => {
+            document.getElementById('shindo_text').textContent = document.getElementById('shindo').value;
+        };
         startTime = Date.now();
         loadJsonP();
     }
 };
     </script>
     <body>
-        <input type="button" value="start"> スタートを押すと、最初にテスト音声が流れます<br>
-        <div id="text">発声ログ:<br></div>
+        <input type="button" value="start" id="start"> スタートを押すと、最初にテスト音声が流れます<br>
+        <div id='content' style='display:none'>
+            <input type='range' min="0" max="100" id="volume"> 音量<br>
+            <input type='range' min="0" max="7" step='1' id="shindo"> 震度 <span id="shindo_text">1</span> 以下は通知しない<br>
+            <input type='checkbox' id="no_update"> 情報更新は通知しない<br>
+            <input type='button' value='テスト音声発声' id='test'>
+            <div id="text">発声ログ:<br></div>
+        </div>
     </body>
 </html>
