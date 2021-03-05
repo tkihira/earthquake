@@ -147,9 +147,14 @@ onload = () => {
 };
     </script>
     <body>
+        <h1>強震モニタ 音声通知版</h1>
+        <p>
+            強震モニタで地震を検知した時に、その内容を音声で通知します。<br>
+            <a href="http://www.kmoni.bosai.go.jp/">強震モニタ オリジナル版はこちら</a><br>
+        </p>
         <input type="button" value="start" id="start"> スタートを押すと、最初にテスト音声が流れます<br>
         <div id='content' style='display:none'>
-            <input type='range' min="0" max="100" id="volume"> 音量<br>
+            <input type='range' min="0" max="100" id="volume"> 音量（※発声中は音量は変えられません）<br>
             <input type='range' min="0" max="7" step='1' id="shindo"> 震度 <span id="shindo_text">1</span> 以下は通知しない<br>
             <input type='checkbox' id="no_update"> 情報更新は通知しない<br>
             <input type='button' value='テスト音声発声' id='test'>
