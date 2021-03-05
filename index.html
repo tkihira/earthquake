@@ -138,7 +138,7 @@ onload = () => {
         document.getElementById('test').onclick = () => {
             speak('テストです');
         };
-        document.getElementById('shindo').onchange = () => {
+        document.getElementById('shindo').oninput = () => {
             document.getElementById('shindo_text').textContent = document.getElementById('shindo').value;
         };
         startTime = Date.now();
@@ -149,8 +149,9 @@ onload = () => {
     <body>
         <h1>強震モニタ 音声通知版</h1>
         <p>
-            強震モニタで地震を検知した時に、その内容を音声で通知します。<br>
+            強震モニタで地震を検知した時に、その内容を音声で通知します。現状 Chrome もしくは Firefox のみでしか動作しないと思います。<br>
             <a href="http://www.kmoni.bosai.go.jp/">強震モニタ オリジナル版はこちら</a><br>
+            <a href="https://github.com/tkihira/earthquake">github</a><br>
         </p>
         <input type="button" value="start" id="start"> スタートを押すと、最初にテスト音声が流れます<br>
         <div id='content' style='display:none'>
