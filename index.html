@@ -9,7 +9,7 @@
 
 const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
 
-let timeoutId = 0;
+let timeoutId = null;
 let scriptTag;
 let prevText = '';
 let prevReportId = '';
@@ -34,9 +34,9 @@ const speak = (text) => {
 };
 
 window.callback = (payload) => {
-    if(timeoutId) {
+    if(timeoutId != null) {
         clearTimeout(timeoutId);
-        timeoutId = 0;
+        timeoutId = null;
     }
     if(scriptTag) {
         document.body.removeChild(scriptTag);
@@ -106,9 +106,11 @@ window.callback = (payload) => {
 
 const removeScript = () => {
     console.log('connection failed');
-    timeoutId = 0;
-    document.body.removeChild(scriptTag);
-    scriptTag = null;
+    timeoutId = null;
+    if(scriptTag) {
+        document.body.removeChild(scriptTag);
+        scriptTag = null;
+    }
 
     loadJsonP();
 }
