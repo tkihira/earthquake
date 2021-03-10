@@ -34,6 +34,7 @@ const speak = (text) => {
 };
 
 window.callback = (payload) => {
+    setTimeout(loadJsonP, 1000);
     if(timeoutId != null) {
         clearTimeout(timeoutId);
         timeoutId = null;
@@ -101,7 +102,6 @@ window.callback = (payload) => {
         }
     }
 
-    setTimeout(loadJsonP, 1000);
 };
 
 const removeScript = () => {
@@ -120,6 +120,7 @@ const n = (str) => {
 }
 
 const loadJsonP = () => {
+    timeoutId = setTimeout(removeScript, 10000);
     const script = document.createElement('script');
     let d = new Date(Date.now() - 5000);
     if(false) {
@@ -127,7 +128,6 @@ const loadJsonP = () => {
     }
     script.src = url + `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}.json?jsoncallback=callback`;
     scriptTag = document.body.appendChild(script);
-    timeoutId = setTimeout(removeScript, 10000);
 };
 onload = () => {
     document.getElementById('start').onclick = () => {
