@@ -67,7 +67,7 @@ window.callback = (payload) => {
     if(payload.report_id) {
         if(!prevText) {
             // まだ音を出していない
-            if(testVoice || payload.calcintensity > minShindo) {
+            if(testVoice || payload.calcintensity.charAt(0) > minShindo) {
                 prevMagunitude = payload.magunitude;
                 prevRegionName = payload.region_name;
                 prevCalcIntensity = payload.calcintensity;
@@ -80,7 +80,7 @@ window.callback = (payload) => {
                 testVoice = '';
             }
         } else {
-            if(!noUpdate && payload.calcintensity > minShindo) {
+            if(!noUpdate && payload.calcintensity.charAt(0) > minShindo) {
                 // 情報が更新された場合に音を出す
                 let text = '';
                 if(payload.calcintensity !== prevCalcIntensity) {
@@ -125,6 +125,7 @@ const loadJsonP = () => {
     let d = new Date(Date.now() - 5000);
     if(false) {
         d = new Date((Date.now() - startTime) + (+new Date("2021/02/15 21:26:08.00+900")));
+        // d = new Date((Date.now() - startTime) + (+new Date("2021/03/20 18:09:50.00+900")));　震度5強
     }
     script.src = url + `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}.json?jsoncallback=callback`;
     scriptTag = document.body.appendChild(script);
