@@ -9,8 +9,6 @@
 
 const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
 
-let timeoutId = null;
-let scriptTag;
 let prevText = '';
 let prevReportId = '';
 let prevMagunitude;
@@ -34,17 +32,9 @@ const speak = (text) => {
     console.log(new Date(), text);
 };
 
-window.callback = (payload) => {
+const callback = (payload) => {
     retryCounter = 0;
-    setTimeout(loadJsonP, 1000);
-    if(timeoutId != null) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-    }
-    if(scriptTag) {
-        document.body.removeChild(scriptTag);
-        scriptTag = null;
-    }
+    setTimeout(loadJson, 1000);
 
     if(testVoice) {
         // 初回テスト
@@ -106,37 +96,35 @@ window.callback = (payload) => {
 
 };
 
-const removeScript = () => {
-    console.log(new Date(), 'connection failed');
-    retryCounter++;
-    timeoutId = null;
-    if(scriptTag) {
-        document.body.removeChild(scriptTag);
-        scriptTag = null;
-    }
-
-    loadJsonP();
-}
-
 const n = (str) => {
     return ('0' + str).substr(-2);
 }
 
-const loadJsonP = () => {
-    let wait = 0;
+const loadJson = async () => {
+    let wait = 10000;
     if(retryCounter) {
-        wait = 10000 * (1 << Math.min(5, retryCounter)) * Math.random();
-        console.log(`Retry: ${retryCounter}, wait second: ${(wait + 10000) / 1000}`);
+        wait = 10000 * (1 << Math.min(5, retryCounter)) * Math.random() + 10000;
     }
-    timeoutId = setTimeout(removeScript, 10000 + wait);
-    const script = document.createElement('script');
+    // timeoutId = setTimeout(removeScript, 10000 + wait);
     let d = new Date(Date.now() - 5000);
     if(false) {
         d = new Date((Date.now() - startTime) + (+new Date("2021/02/15 21:26:08.00+900")));
         // d = new Date((Date.now() - startTime) + (+new Date("2021/03/20 18:09:50.00+900")));　震度5強
     }
-    script.src = url + `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}.json?jsoncallback=callback`;
-    scriptTag = document.body.appendChild(script);
+
+    const timeStr = `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}`;
+    // scriptTag = document.body.appendChild(script);
+    try {
+        const response = await fetch('/api/callback?time=' + timeStr);
+        const json = await response.json();
+        callback(json);
+    } catch (e) {
+        console.log(new Date(), e);
+        retryCounter++;
+        console.log(`wait second: ${wait / 1000}, Retry: ${retryCounter}`);
+        await new Promise(r => setTimeout(r, wait));
+        loadJson();
+    }
 };
 onload = () => {
     document.getElementById('start').onclick = () => {
@@ -153,7 +141,7 @@ onload = () => {
             document.getElementById('shindo_text').textContent = document.getElementById('shindo').value;
         };
         startTime = Date.now();
-        loadJsonP();
+        loadJson();
     }
 };
     </script>
