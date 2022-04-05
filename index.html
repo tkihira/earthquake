@@ -7,7 +7,8 @@
 // http://www.kmoni.bosai.go.jp/webservice/hypo/eew/20210214194741.json?jsoncallback=callback
 // 20210215141000
 
-const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
+// const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
+const url = 'http://nmi.jp/earthquake/dev/earthquake/forwarding.php?datetime=';
 
 let prevText = '';
 let prevReportId = '';
@@ -115,8 +116,8 @@ const loadJson = async () => {
     const timeStr = `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}`;
     // scriptTag = document.body.appendChild(script);
     try {
-        const response = await fetch('/api/callback?time=' + timeStr);
-        const json = await response.json();
+        const response = await fetch('./forwarding.php?datetime=' + timeStr);
+        const json = JSON.parse((await response.text()).slice(9, -1));
         callback(json);
     } catch (e) {
         console.log(new Date(), e);
