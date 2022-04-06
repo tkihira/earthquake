@@ -9,6 +9,7 @@
 
 // const url = 'http://www.kmoni.bosai.go.jp/webservice/hypo/eew/';
 const url = 'http://nmi.jp/earthquake/dev/earthquake/forwarding.php?datetime=';
+const TIME_DELTA = 3000;
 
 let prevText = '';
 let prevReportId = '';
@@ -33,10 +34,7 @@ const speak = (text) => {
     console.log(new Date(), text);
 };
 
-const callback = (payload) => {
-    retryCounter = 0;
-    setTimeout(loadJson, 1000);
-
+const parse = (payload) => {
     if(testVoice) {
         // 初回テスト
         payload.magunitude = 0.1;
@@ -102,31 +100,36 @@ const n = (str) => {
 }
 
 const loadJson = async () => {
-    let wait = 10000;
-    if(retryCounter) {
-        wait = 10000 * (1 << Math.min(5, retryCounter)) * Math.random() + 10000;
-    }
-    // timeoutId = setTimeout(removeScript, 10000 + wait);
-    let d = new Date(Date.now() - 5000);
+    let d = new Date(Date.now() - TIME_DELTA);
     if(false) {
         d = new Date((Date.now() - startTime) + (+new Date("2021/02/15 21:26:08.00+900")));
         // d = new Date((Date.now() - startTime) + (+new Date("2021/03/20 18:09:50.00+900")));　震度5強
     }
 
     const timeStr = `${d.getFullYear()}${n(d.getMonth() + 1)}${n(d.getDate())}${n(d.getHours())}${n(d.getMinutes())}${n(d.getSeconds())}`;
-    // scriptTag = document.body.appendChild(script);
+
     try {
-        const response = await fetch('./forwarding.php?datetime=' + timeStr);
+        const response = await fetch('http://nmi.jp/earthquake/dev/forwarding.php?datetime=' + timeStr);
+        // const response = await fetch('./forwarding.php?datetime=' + timeStr);
         const json = JSON.parse((await response.text()).slice(9, -1));
-        callback(json);
+        retryCounter = 0;
+        setTimeout(loadJson, 1000);
+        parse(json);
     } catch (e) {
-        console.log(new Date(), e);
+        console.error(e);
+        // something wrong
+        let wait = 10000;
+        if(retryCounter > 0) {
+            wait = 10000 * (1 << Math.min(5, retryCounter)) * Math.random() + 10000;
+        }
+
         retryCounter++;
         console.log(`wait second: ${wait / 1000}, Retry: ${retryCounter}`);
         await new Promise(r => setTimeout(r, wait));
         loadJson();
     }
 };
+
 onload = () => {
     document.getElementById('start').onclick = () => {
         console.log("script started");
